@@ -93,12 +93,22 @@ claude .
 
 ### 3단계 — skill-creator 설치
 
+**방법 A — 마켓플레이스로 설치** (권장)
+
+Claude Code 내에서 실행:
+
+```
+/plugin marketplace add gobeumsu/JNU-Upstage-Skillthon
+/plugin install skill-creator@solar-skill-creator
+```
+
+**방법 B — 로컬 직접 로드**
+
 ```bash
 claude skills add skills/skill-creator
 ```
 
-> Claude Code에 Skill 제작 가이드가 로드됩니다.
-> 설치 확인: Claude Code 내에서 `/skills` 명령 실행
+> 설치 확인: Claude Code 내에서 `/skills` 실행 → `skill-creator` 목록에 표시
 
 ### 4단계 — Upstage API 키 설정
 
@@ -171,6 +181,7 @@ JNU-Upstage-Skillthon/        ← 내 fork
 
 | 문서 | 설명 |
 |------|------|
+| [solar-skill-creator Marketplace](https://github.com/gobeumsu/JNU-Upstage-Skillthon) | 이 repo — `solar-skill-creator` 마켓플레이스 |
 | [Claude Code — Plugin Marketplaces](https://code.claude.com/docs/ko/plugin-marketplaces) | Skill/Plugin 배포 및 마켓플레이스 구성 |
 | [Claude Code — Plugins](https://code.claude.com/docs/ko/plugins) | Plugin(Skill, Agent, Hook) 제작 가이드 |
 | [Upstage Console Docs](https://console.upstage.ai/docs) | Solar LLM, Embeddings, Document Parse API 레퍼런스 |
