@@ -1,9 +1,9 @@
 ---
 name: solar-skill-creator
-description: Create new skills, modify and improve existing skills. Use when users want to create a skill from scratch, edit, or optimize an existing skill.
+description: Create new skills, modify and improve existing skills using the Upstage API — Solar LLM and Document Intelligence (chat, document parse, OCR, information extract, embeddings). Use when users want to create a skill from scratch, edit, or optimize an existing skill.
 ---
 
-# Skill Creator
+# Solar Skill Creator
 
 A skill for creating new skills using upstage.
 
