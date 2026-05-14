@@ -138,7 +138,7 @@ EXTRACT_SYSTEM = """당신은 한국 근로계약서 분석 전문가입니다.
   (예: 90% → 0.9, 80% → 0.8). 삭감 조항 없으면 null
 - 계약 기간: 근로 시작일~종료일로 계산한 개월 수. '3개월', '6개월', '1년' 등 직접 명시된 경우 우선 사용.
   기간 미정(무기계약 등)이면 null
-- 독소 조항(근로기준법 제20조): '벌금', '위약금', '손해배상', '공제', '미지급', '차감' 키워드를 문맥과 함께 분석.
+- 독소 조항(근로기준법 제20조): 표준 양식의 제11항 '그 밖의 사항' 또는 계약서 여백에 수기/타이핑으로 추가된 텍스트를 집중 분석.
   아래 경우만 위반(has_illegal_penalty=true)으로 판별:
   · 근태 페널티: "지각/결근 시 OOO원 공제", "벌금 OOO원 부과" 등
   · 퇴사 페널티: "무단퇴사 시 급여 미지급", "계약 미이행 시 위약금 배상", "퇴사 시 손해배상 청구" 등
@@ -194,71 +194,80 @@ def extract_entities(parsed_text: str) -> dict:
 
 def check_compliance(entities: dict) -> dict:
     """
-    계약서로 판단 가능한 항목만 검사한다.
-    - false: 위반 없음 (준수)
-    - true: 위반 감지
-    - null: 계약서만으로 판단 불가 (실제 근무 후 리뷰로 확인 필요)
+    계약서로 판단 가능한 항목을 검사한다.
+    - true:  준수 확인
+    - false: 위반 감지
+    - null:  계약서만으로 판단 불가
     """
     checks = {}
 
-    # 1. 최저시급 미준수 — 시급이 최저시급보다 낮을 때만 true
+    # 1. 최저시급_준수
     hourly = entities.get("hourly_wage")
     if hourly is not None:
-        checks["최저시급 미준수"] = hourly < MIN_HOURLY_WAGE_2026
+        checks["최저시급_준수"] = hourly >= MIN_HOURLY_WAGE_2026
     else:
-        checks["최저시급 미준수"] = None  # 월급제 등: 판단 불가
+        checks["최저시급_준수"] = None
 
-    # 2. 주휴수당 — 계약서만으로 지급 여부 판단 불가.
-    #    주 15시간 이상 근무 시 주휴수당 대상 조건 충족 → 확인 필요 안내
-    weekly_h = entities.get("weekly_hours")
-    if weekly_h is not None and weekly_h >= 15:
-        checks["주휴수당"] = "확인필요"  # 주 15시간 이상: 지급 조건 충족 여부 확인 필요
-    else:
-        checks["주휴수당"] = None  # 주 15시간 미만이거나 정보 없음: 판단 불가
-
-    # 3. 휴게시간 부족 — 근기법 제54조: 4시간→30분, 8시간→1시간
+    # 2. 휴게시간_준수 — 근기법 제54조: 4시간→30분, 8시간→1시간
     daily_h = entities.get("daily_work_hours")
     break_m = entities.get("break_time_minutes")
     if daily_h is not None and break_m is not None:
         if daily_h >= 8:
-            checks["휴게시간 부족"] = break_m < 60
+            checks["휴게시간_준수"] = break_m >= 60
         elif daily_h >= 4:
-            checks["휴게시간 부족"] = break_m < 30
+            checks["휴게시간_준수"] = break_m >= 30
         else:
-            checks["휴게시간 부족"] = False
+            checks["휴게시간_준수"] = True
     else:
-        checks["휴게시간 부족"] = None
+        checks["휴게시간_준수"] = None
 
-    # 4. 초과근무 급여 미지급 — 계약서 미언급 시 리스크
-    checks["초과근무 급여 미지급"] = not entities.get("overtime_pay_mentioned", False)
+    # 3. 주휴수당_명시 — 계약서 내 주휴수당 언급 여부
+    checks["주휴수당_명시"] = entities.get("weekly_holiday_pay_mentioned", False)
 
-    # 9. 최저임금법 수습기간 준수 (최저임금법 제5조 제2항)
-    #    수습기간 급여 삭감은 계약기간 1년 이상일 때만 허용
+    # 4. 수습기간_합법성 — 최저임금법 제5조 제2항: 급여 삭감은 1년 이상 계약에만 허용
     probation_exists = entities.get("probation_period_exists", False)
     probation_rate = entities.get("probation_wage_rate")
     duration_months = entities.get("contract_duration_months")
 
     if probation_exists and probation_rate is not None and probation_rate < 1.0:
-        # 수습 급여 삭감 조항 존재
         if duration_months is not None:
-            # 계약기간이 명시된 경우: 1년(12개월) 미만이면 위반
-            checks["수습기간동안 최저임금준수"] = duration_months < 12
+            checks["수습기간_합법성"] = duration_months >= 12
         else:
-            # 계약기간 불명 (무기계약 등): 판단 불가
-            checks["수습기간동안 최저임금준수"] = None
+            checks["수습기간_합법성"] = None  # 무기계약 등 계약기간 불명: 판단 불가
     else:
-        # 수습 삭감 조항 없음: 위반 없음
-        checks["수습기간동안 최저임금준수"] = False
+        checks["수습기간_합법성"] = True  # 삭감 조항 없음
 
-    # 위약금·손해배상 독소 조항 (근로기준법 제20조)
-    checks["위약금_손해배상_강제조항"] = entities.get("has_illegal_penalty", False)
+    # 5. 독소조항_없음 — 근로기준법 제20조: 위약금·손해배상 강제조항
+    checks["독소조항_없음"] = not entities.get("has_illegal_penalty", False)
 
     return checks
 
 
-def risk_level(checks: dict) -> str:
-    confirmed_violations = [k for k, v in checks.items() if v is True]
-    if any(k in confirmed_violations for k in ["최저시급 미준수", "수습기간동안 최저임금준수", "위약금_손해배상_강제조항"]):
+def build_violations_and_verifications(entities: dict, checks: dict) -> tuple[list, list]:
+    """confirmed_violations와 needs_verification을 각각 산출한다."""
+    confirmed = []
+
+    if checks.get("최저시급_준수") is False:
+        confirmed.append("최저시급 미준수")
+    if checks.get("휴게시간_준수") is False:
+        confirmed.append("휴게시간 부족")
+    if checks.get("수습기간_합법성") is False:
+        confirmed.append("수습기간 최저임금법 위반(1년 미만 계약)")
+    if checks.get("독소조항_없음") is False:
+        confirmed.append("위약금 및 손해배상 강제조항")
+
+    needs = []
+    weekly_h = entities.get("weekly_hours")
+    if weekly_h is not None and weekly_h >= 15:
+        needs.append("실제 주휴수당 지급 여부")
+    needs.append("실제 초과근무 발생 및 수당 지급 여부")  # 무조건 포함
+
+    return confirmed, needs
+
+
+def risk_level(confirmed_violations: list) -> str:
+    serious = {"최저시급 미준수", "수습기간 최저임금법 위반(1년 미만 계약)", "위약금 및 손해배상 강제조항"}
+    if any(v in serious for v in confirmed_violations):
         return "HIGH"
     if len(confirmed_violations) >= 2:
         return "MEDIUM"
@@ -273,15 +282,15 @@ def analyze(file_path: str, force_ocr: bool = False) -> dict:
     parsed_text = parse_document(file_path, force_ocr=force_ocr)
     entities = extract_entities(parsed_text)
     checks = check_compliance(entities)
+    confirmed, needs = build_violations_and_verifications(entities, checks)
 
     return {
         "file": file_path,
         "extracted_info": entities,
         "compliance_check": checks,
-        "confirmed_violations": [k for k, v in checks.items() if v is True],
-        "needs_verification": [k for k, v in checks.items() if v == "확인필요"],
-        "unverifiable_items": [k for k, v in checks.items() if v is None],
-        "risk_level": risk_level(checks),
+        "confirmed_violations": confirmed,
+        "needs_verification": needs,
+        "risk_level": risk_level(confirmed),
         "minimum_wage_2026": MIN_HOURLY_WAGE_2026,
     }
 

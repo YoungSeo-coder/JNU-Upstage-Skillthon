@@ -49,33 +49,39 @@ echo '{"file_path": "./contract.jpg", "force_ocr": true}' | python ./scripts/ana
 
 ```json
 {
-  "file": "./contract.jpg",
+  "file": "./assets/recent_contract.png",
   "extracted_info": {
     "business_name": "카페 봄봄",
     "hourly_wage": 10500,
     "monthly_wage": null,
     "work_start_date": "2026-03-01",
     "work_end_date": null,
+    "contract_duration_months": null,
     "daily_work_hours": 8.0,
     "weekly_hours": 40.0,
     "break_time_minutes": 60,
     "pay_date": "매월 25일",
     "weekly_holiday_pay_mentioned": true,
     "overtime_pay_mentioned": false,
-    "contract_signed_by_both": true
+    "probation_period_exists": false,
+    "probation_wage_rate": null,
+    "contract_signed_by_both": true,
+    "has_illegal_penalty": false,
+    "penalty_evidence": null
   },
   "compliance_check": {
-    "최저시급 미준수": false,
-    "주휴수당": "확인필요",
-    "휴게시간 부족": false,
-    "초과근무 급여 미지급": true,
-    "수습기간동안 최저임금준수": false,
-    "위약금_손해배상_강제조항": false
+    "최저시급_준수": true,
+    "휴게시간_준수": true,
+    "주휴수당_명시": true,
+    "수습기간_합법성": true,
+    "독소조항_없음": true
   },
-  "confirmed_violations": ["초과근무 급여 미지급"],
-  "needs_verification": ["주휴수당"],
-  "unverifiable_items": [],
-  "risk_level": "LOW",
+  "confirmed_violations": [],
+  "needs_verification": [
+    "실제 주휴수당 지급 여부",
+    "실제 초과근무 발생 및 수당 지급 여부"
+  ],
+  "risk_level": "SAFE",
   "minimum_wage_2026": 10030
 }
 ```
@@ -116,10 +122,10 @@ echo '{"file_path": "./contract.jpg", "force_ocr": true}' | python ./scripts/ana
 
 ## 예시 파일
 
-데모 및 테스트용 샘플 근로계약서 이미지: `./assets/clean_alba_example.png`
+데모 및 테스트용 샘플 근로계약서 이미지: `./assets/recent_contract.png`
 
 ```bash
-python ./scripts/analyze_contract.py ./assets/clean_alba_example.png
+python ./scripts/analyze_contract.py ./assets/recent_contract.png
 ```
 
 ## 환경 설정
