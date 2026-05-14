@@ -114,6 +114,14 @@ echo '{"file_path": "./contract.jpg", "force_ocr": true}' | python ./scripts/ana
 3. O/X 체크리스트 항목과 교차 검증 (예: 알바생이 "최저시급 준수"로 체크했는데 계약서 시급이 최저시급 미만이면 불일치 플래그)
 4. 결과를 `add_review.py`에 전달하여 클린지수 산출에 반영
 
+## 예시 파일
+
+데모 및 테스트용 샘플 근로계약서 이미지: `./assets/clean_alba_example.png`
+
+```bash
+python ./scripts/analyze_contract.py ./assets/clean_alba_example.png
+```
+
 ## 환경 설정
 
 `UPSTAGE_API_KEY` 환경변수가 설정되어 있어야 한다. `.env.example` 참고: `./assets/.env.example`
