@@ -54,14 +54,27 @@ python ./scripts/purify.py "사장 성질 더럽고 월급도 맨날 늦게 줌"
 
 ```json
 {
-  "purified_text": "순화된 후기 텍스트",
-  "risk_level": "HIGH | MEDIUM | LOW | SAFE",
-  "extracted_tags": ["급여지연", "소통어려움"],
-  "changes": [
+  "original_text": "사용자가 입력한 원문",
+  "risk_assessment": {
+    "risk_level": "HIGH | MEDIUM | LOW | SAFE",
+    "detected_issues": ["형법 제307조 사실적시 명예훼손 우려"],
+    "reasoning": "왜 이 리뷰가 법적 리스크를 가질 수 있는지에 대한 사용자 친화적인 설명"
+  },
+  "purified_options": [
     {
-      "original": "원문 표현",
-      "replaced": "순화된 표현",
-      "reason": "순화 이유 (관련 법 조항 포함)"
+      "option_id": 1,
+      "style": "매우 건조하고 객관적인 사실 전달형",
+      "text": "순화된 텍스트 1"
+    },
+    {
+      "option_id": 2,
+      "style": "부드럽고 완곡한 경험 공유형",
+      "text": "순화된 텍스트 2"
+    },
+    {
+      "option_id": 3,
+      "style": "원문의 감정을 어느 정도 유지하되 법적 문제만 제거한 형태",
+      "text": "순화된 텍스트 3"
     }
   ]
 }
