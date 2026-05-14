@@ -3,7 +3,7 @@
 analyze_contract.py — 근로계약서 분석 및 법적 준수 여부 검증
 
 Upstage Document Parse API로 계약서 이미지/PDF를 텍스트화한 뒤,
-Solar Chat API로 핵심 항목을 추출하고 9개 클린지수 기준 대비 준수 여부를 반환한다.
+Solar Chat API로 핵심 항목을 추출하고 5개 준수 항목 기준 대비 준수 여부를 반환한다.
 
 사용법:
     python analyze_contract.py ./contract.jpg
