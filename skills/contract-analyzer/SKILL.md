@@ -65,18 +65,16 @@ echo '{"file_path": "./contract.jpg", "force_ocr": true}' | python ./scripts/ana
     "contract_signed_by_both": true
   },
   "compliance_check": {
-    "근로계약서 미작성": false,
     "최저시급 미준수": false,
-    "주휴수당 미지급": false,
+    "주휴수당": "확인필요",
     "휴게시간 부족": false,
-    "급여지급 지연": null,
-    "사전 협의 없는 스케줄 변경": null,
-    "반복적이고 지속적인 대타요구 및 강요": null,
-    "동시간대 업무자 부족": null,
-    "초과근무 급여 미지급": true
+    "초과근무 급여 미지급": true,
+    "수습기간동안 최저임금준수": false,
+    "위약금_손해배상_강제조항": false
   },
   "confirmed_violations": ["초과근무 급여 미지급"],
-  "unverifiable_items": ["급여지급 지연", "사전 협의 없는 스케줄 변경", "반복적이고 지속적인 대타요구 및 강요", "동시간대 업무자 부족"],
+  "needs_verification": ["주휴수당"],
+  "unverifiable_items": [],
   "risk_level": "LOW",
   "minimum_wage_2026": 10030
 }

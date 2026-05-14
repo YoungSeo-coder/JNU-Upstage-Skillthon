@@ -49,6 +49,25 @@ CRITERIA_POSITIVE = {
     "초과근무 급여 미지급": "초과근무 급여 지급",
 }
 
+# 상권 별칭 → 정식 상권명 매핑
+AREA_ALIASES: dict[str, str] = {
+    "상대": "상대",
+    "상과대": "상대",
+    "예대": "예대",
+    "예술대": "예대",
+    "정문": "정문",
+    "전남대 정문": "정문",
+    "후문": "후문",
+    "전남대 후문": "후문",
+    "전철우": "전철우",
+    "전철우 사거리": "전철우",
+}
+
+def normalize_area(area: str | None) -> str | None:
+    if not area:
+        return area
+    return AREA_ALIASES.get(area.strip(), area.strip())
+
 # ── 스키마 ──────────────────────────────────────────────────────────────
 
 INTENT_SCHEMA = {
@@ -150,7 +169,8 @@ RECOMMEND인 경우 search_term은 null로 반환하세요."""
 PARSE_SYSTEM = """당신은 알바 검색 조건 분석 전문가입니다.
 사용자의 자연어 요청을 분석하여 검색 조건을 추출하세요.
 
-상권: 상대, 예대, 정문, 후문, 전철우
+상권 (정식명 → 별칭): 상대(상과대), 예대(예술대), 정문(전남대 정문), 후문(전남대 후문), 전철우(전철우 사거리)
+별칭이 입력되어도 반드시 정식 상권명(상대/예대/정문/후문/전철우)으로 반환하세요.
 업종: 카페, 식당, 편의점, 주점, 패스트푸드, 기타
 기피 항목: 근로계약서 미작성, 최저시급 미준수, 주휴수당 미지급, 휴게시간 부족,
   급여지급 지연, 사전 협의 없는 스케줄 변경, 반복적이고 지속적인 대타요구 및 강요,
@@ -216,11 +236,13 @@ def classify_intent(query: str) -> dict:
 # ── SEARCH 경로 ─────────────────────────────────────────────────────────
 
 def search_businesses(search_term: str, businesses: list) -> list:
-    """업체명·상권·업종에 대해 부분 문자열 매칭으로 검색한다."""
+    """업체명·상권·업종에 대해 부분 문자열 매칭으로 검색한다. 상권 별칭도 정식명으로 정규화하여 검색한다."""
     term = search_term.strip().lower()
+    canonical_area = normalize_area(search_term)  # 별칭이면 정식 상권명으로 변환
     results = [
         b for b in businesses
         if term in b["name"].lower()
+        or b["area"] == canonical_area
         or term in b["area"].lower()
         or term in b["industry"].lower()
     ]
@@ -301,6 +323,8 @@ def generate_recommendations(query: str, prefs: dict, candidates: list) -> dict:
 
 def handle_recommend(query: str, businesses: list) -> dict:
     prefs = parse_preferences(query)
+    if prefs.get("area"):
+        prefs["area"] = normalize_area(prefs["area"])  # LLM이 별칭을 반환한 경우 정규화
     candidates = filter_candidates(businesses, prefs)
     return generate_recommendations(query, prefs, candidates)
 
