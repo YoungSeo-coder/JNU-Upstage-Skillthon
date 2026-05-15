@@ -92,11 +92,7 @@ echo '{"file_path": "./contract.jpg", "force_ocr": true}' | python ./scripts/ana
 |---|---|
 | `true` | 준수 확인 (위반 없음) |
 | `false` | 위반 감지 |
-<<<<<<< HEAD
 | `null` | 계약서만으로 판단 불가 — 실제 근무 후 직접 확인 필요 |
-=======
-| `null` | 계약서만으로 판단 불가 — 실제 근무 후 리뷰로 확인 필요 |
->>>>>>> 2699511b6983fd844799a5c2a532924bfc7b0f83
 
 ## 계약서에서 검증 가능한 항목
 
@@ -117,16 +113,6 @@ echo '{"file_path": "./contract.jpg", "force_ocr": true}' | python ./scripts/ana
 | LOW | 확인된 위반 항목 1개 |
 | SAFE | 확인된 위반 없음 |
 
-<<<<<<< HEAD
-=======
-## 클린알바맵 연동 시나리오
-
-1. 알바생이 근로계약서 사진 업로드
-2. `contract-analyzer` → 시급·휴게시간 등 추출 + 위반 항목 탐지
-3. O/X 체크리스트 항목과 교차 검증 (예: 알바생이 "최저시급 준수"로 체크했는데 계약서 시급이 최저시급 미만이면 불일치 플래그)
-4. 결과를 `add_review.py`에 전달하여 클린지수 산출에 반영
-
->>>>>>> 2699511b6983fd844799a5c2a532924bfc7b0f83
 ## 예시 파일
 
 데모 및 테스트용 샘플 근로계약서 이미지: `./assets/recent_contract.png`
