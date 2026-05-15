@@ -2,28 +2,37 @@
 """
 add_review.py — 사업장 리뷰 추가 및 클린지수 동적 갱신
 
+프론트엔드에서 사용자가 직접 체크한 O/X 결과를 받아 클린지수를 산출한다.
+LLM 분석 없이 체크리스트 데이터만으로 단순 산수(100 - 위반항목수 × 12.5)로 계산한다.
+주관식 텍스트는 점수에 관여하지 않고 저장만 된다.
+
 사용법:
-    # 기존 사업장에 리뷰 추가
-    python add_review.py 스타벅스_상대점 "월급은 정시에 나왔지만 쉬는 시간이 부족했어요."
+    # stdin JSON 입력 (프론트엔드 연동 주요 방식)
+    echo '{
+      "name": "카페 봄봄", "area": "예대", "industry": "카페",
+      "criteria_flags": {
+        "근로계약서 미작성": false,
+        "최저시급 미준수": false,
+        "주휴수당 미지급": false,
+        "휴게시간 부족": true,
+        "급여지급 지연": false,
+        "사전 협의 없는 스케줄 변경": false,
+        "반복적이고 지속적인 대타요구 및 강요": false,
+        "초과근무 급여 미지급": false
+      },
+      "review_text": "쉬는 시간이 부족했어요."
+    }' | python add_review.py
 
-    # 신규 사업장 등록 + 리뷰 추가
-    python add_review.py --name "카페 봄봄" --area 예대 --industry 카페 "리뷰 텍스트"
+    # CLI — 기존 사업장에 위반 항목 지정
+    python add_review.py 스타벅스_상대점 --violations "휴게시간 부족" --review "쉬는 시간이 없었어요."
 
-    # stdin JSON 입력
-    echo '{"name": "카페 봄봄", "area": "예대", "industry": "카페", "review": "..."}' | python add_review.py
+    # 신규 사업장 등록
+    python add_review.py --name "카페 온도" --area 후문 --industry 카페 --violations "급여지급 지연" --review "리뷰 텍스트"
 """
 
-import os, sys, json, argparse, re
+import sys, json, argparse, re
 from datetime import date
 from pathlib import Path
-from openai import OpenAI
-
-UPSTAGE_API_KEY = os.environ.get("UPSTAGE_API_KEY")
-if not UPSTAGE_API_KEY:
-    print(json.dumps({"error": "UPSTAGE_API_KEY 환경변수가 설정되지 않았습니다."}, ensure_ascii=False))
-    sys.exit(1)
-
-client = OpenAI(api_key=UPSTAGE_API_KEY, base_url="https://api.upstage.ai/v1")
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -40,36 +49,6 @@ CRITERIA_KEYS = [
 ]
 
 WEIGHT = 100 / len(CRITERIA_KEYS)  # 항목당 12.5점
-
-ANALYZE_SCHEMA = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "criteria_flags",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {k: {"type": "boolean"} for k in CRITERIA_KEYS},
-            "required": CRITERIA_KEYS,
-            "additionalProperties": False,
-        },
-    },
-}
-
-ANALYZE_SYSTEM = """당신은 알바 근무환경 분석 전문가입니다.
-주어진 리뷰에서 아래 8개 클린지수 위반 항목이 언급되는지 판단하세요.
-리뷰에서 해당 항목의 위반이 명확히 언급된 경우만 true, 그렇지 않으면 false로 표시하세요.
-
-판단 기준:
-1. 근로계약서 미작성 — 근로계약서를 작성하지 않았다고 언급된 경우
-2. 최저시급 미준수 — 최저시급보다 적게 받았다고 언급된 경우
-3. 주휴수당 미지급 — 주휴수당을 받지 못했다고 언급된 경우
-4. 휴게시간 부족 — 법정 휴게시간이 보장되지 않았다고 언급된 경우
-5. 급여지급 지연 — 급여가 늦게 지급되었다고 언급된 경우
-6. 사전 협의 없는 스케줄 변경 — 공지 없이 갑자기 스케줄이 변경된 경우
-7. 반복적이고 지속적인 대타요구 및 강요 — 대타를 강요당했다고 언급된 경우
-8. 초과근무 급여 미지급 — 초과근무 수당을 받지 못했다고 언급된 경우
-
-항상 한국어로 응답하세요."""
 
 
 def slugify(name: str) -> str:
@@ -102,18 +81,9 @@ def new_business(business_id: str, name: str, area: str, industry: str) -> dict:
     }
 
 
-def analyze_criteria(review_text: str) -> dict:
-    resp = client.chat.completions.create(
-        model="solar-pro3",
-        messages=[
-            {"role": "system", "content": ANALYZE_SYSTEM},
-            {"role": "user", "content": f"리뷰:\n{review_text}"},
-        ],
-        response_format=ANALYZE_SCHEMA,
-        temperature=0.1,
-        max_tokens=256,
-    )
-    return json.loads(resp.choices[0].message.content)
+def validate_criteria_flags(flags: dict) -> dict:
+    """누락된 항목은 false로, 알 수 없는 키는 무시한다."""
+    return {k: bool(flags.get(k, False)) for k in CRITERIA_KEYS}
 
 
 def recalculate_score(agg: dict) -> int:
@@ -127,8 +97,8 @@ def recalculate_score(agg: dict) -> int:
     return max(0, round(100 - deduction))
 
 
-def add_review(business: dict, review_text: str) -> dict:
-    flags = analyze_criteria(review_text)
+def add_review(business: dict, criteria_flags: dict, review_text: str) -> dict:
+    flags = validate_criteria_flags(criteria_flags)
 
     review_id = f"r{len(business['reviews']) + 1:04d}"
     business["reviews"].append({
@@ -153,7 +123,8 @@ def add_review(business: dict, review_text: str) -> dict:
 def main():
     if not sys.stdin.isatty():
         data = json.loads(sys.stdin.read().strip())
-        review_text = data.pop("review", "")
+        criteria_flags = data.get("criteria_flags", {})
+        review_text = data.get("review_text", "")
         business_id = data.get("business_id") or slugify(data.get("name", "unknown"))
         business = load_business(business_id) or new_business(
             business_id,
@@ -167,7 +138,16 @@ def main():
         parser.add_argument("--name")
         parser.add_argument("--area")
         parser.add_argument("--industry")
+        parser.add_argument(
+            "--violations", nargs="*", default=[],
+            metavar="항목명",
+            help="위반 항목 목록 (예: --violations '휴게시간 부족' '급여지급 지연')",
+        )
+        parser.add_argument("--review", default="", help="주관식 후기 텍스트 (선택)")
         args = parser.parse_args()
+
+        criteria_flags = {k: (k in args.violations) for k in CRITERIA_KEYS}
+        review_text = args.review
 
         if args.name:
             business_id = slugify(args.name)
@@ -176,10 +156,8 @@ def main():
                 args.area or "미지정",
                 args.industry or "기타",
             )
-            review_text = " ".join(args.positional)
-        elif len(args.positional) >= 2:
+        elif args.positional:
             business_id = args.positional[0]
-            review_text = " ".join(args.positional[1:])
             business = load_business(business_id)
             if not business:
                 print(json.dumps(
@@ -189,16 +167,12 @@ def main():
                 sys.exit(1)
         else:
             print(json.dumps(
-                {"error": "사용법: add_review.py <business_id> '리뷰' 또는 --name '업체명' --area 지역 --industry 업종 '리뷰'"},
+                {"error": "사용법: add_review.py <business_id> 또는 --name '업체명' --area 지역 --industry 업종"},
                 ensure_ascii=False,
             ))
             sys.exit(1)
 
-    if not review_text.strip():
-        print(json.dumps({"error": "리뷰 텍스트를 입력해주세요."}, ensure_ascii=False))
-        sys.exit(1)
-
-    result = add_review(business, review_text)
+    result = add_review(business, criteria_flags, review_text)
     agg = result["aggregate"]
 
     print(json.dumps({
