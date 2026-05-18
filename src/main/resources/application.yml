@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: cnu-clean-alba-map
+  datasource:
+    url: jdbc:h2:mem:cleanalba;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+
+app:
+  kakao:
+    # TODO: Kakao Developers에서 발급받은 JavaScript 키를 템플릿/환경변수로 연결하세요.
+    javascript-key: YOUR_KAKAO_MAP_JAVASCRIPT_KEY
+  upload:
+    # MVP에서는 파일명을 검수용 메타데이터로만 저장합니다. 실제 파일 저장소는 추후 S3/로컬로 확장하세요.
+    proof-dir: uploads/proofs
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://localhost:3306/clean_alba?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: clean_alba
+    password: change-me
+  jpa:
+    hibernate:
+      ddl-auto: update

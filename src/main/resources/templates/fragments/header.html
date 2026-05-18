@@ -1,0 +1,14 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header" class="site-header">
+    <a class="brand" th:href="@{/}">전남대 클린 알바 지도</a>
+    <nav class="nav">
+        <a th:href="@{/workplaces}">사업장 목록</a>
+        <a th:href="@{/reviews/new}">후기 작성</a>
+        <a th:href="@{/about}">서비스 소개</a>
+        <a th:href="@{/admin/reviews}">관리자</a>
+    </nav>
+</header>
+</body>
+</html>

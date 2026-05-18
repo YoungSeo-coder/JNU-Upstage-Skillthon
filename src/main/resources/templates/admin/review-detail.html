@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>후기 검토</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="page narrow">
+    <section class="section-head">
+        <h1>후기 검토</h1>
+        <p>주관식 후기의 비방성 표현, 개인정보 포함 여부, 인증 자료 파일명을 확인하세요.</p>
+    </section>
+
+    <article class="panel">
+        <dl class="detail-list">
+            <div><dt>사업장</dt><dd th:text="${review.workplace.name}">사업장</dd></div>
+            <div><dt>근무 기간</dt><dd th:text="${review.workPeriod}">기간</dd></div>
+            <div><dt>근무 형태</dt><dd th:text="${review.employmentType}">형태</dd></div>
+            <div><dt>계산 점수</dt><dd th:text="${review.calculatedScore + '점'}">점수</dd></div>
+            <div><dt>인증 자료 파일명</dt><dd th:text="${review.proofFileName}">파일</dd></div>
+            <div><dt>상태</dt><dd th:text="${review.status}">PENDING</dd></div>
+        </dl>
+        <h2>주관식 후기</h2>
+        <p class="comment-box" th:text="${#strings.isEmpty(review.subjectiveComment) ? '입력된 주관식 후기가 없습니다.' : review.subjectiveComment}">후기</p>
+    </article>
+
+    <div class="action-row">
+        <form th:action="@{/admin/reviews/{id}/approve(id=${review.id})}" method="post">
+            <button class="button primary" type="submit">승인</button>
+        </form>
+        <form th:action="@{/admin/reviews/{id}/reject(id=${review.id})}" method="post">
+            <button class="button danger" type="submit">반려</button>
+        </form>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

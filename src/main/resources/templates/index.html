@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전남대 클린 알바 지도</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="page">
+    <section class="hero">
+        <div>
+            <p class="eyebrow">CNU Clean Alba Map</p>
+            <h1>전남대 주변 알바 근로환경을 체크리스트로 확인하세요</h1>
+            <p>최저시급, 근로계약서, 주휴수당, 휴게시간 등 객관 항목 기반으로 클린 지수를 계산합니다.</p>
+        </div>
+        <a class="button primary" th:href="@{/reviews/new}">후기 작성하기</a>
+    </section>
+
+    <section class="map-layout">
+        <div class="map-panel">
+            <div id="map" class="map" aria-label="전남대 주변 사업장 지도">
+                <div class="map-fallback">Kakao Map API 키를 연결하면 이 영역에 지도가 표시됩니다.</div>
+            </div>
+            <div class="legend">
+                <span><i class="dot green"></i>80점 이상</span>
+                <span><i class="dot yellow"></i>60점 이상</span>
+                <span><i class="dot orange"></i>40점 이상</span>
+                <span><i class="dot red"></i>40점 미만</span>
+                <span><i class="dot gray"></i>후기 부족</span>
+            </div>
+        </div>
+
+        <aside class="summary-list">
+            <h2>사업장 요약</h2>
+            <article class="workplace-card" th:each="workplace : ${workplaces}">
+                <div>
+                    <span class="badge" th:classappend="${workplace.markerColor}" th:text="${workplace.scoreLabel()}">80점</span>
+                    <h3><a th:href="@{/workplaces/{id}(id=${workplace.id})}" th:text="${workplace.name}">사업장명</a></h3>
+                    <p th:text="${workplace.address}">주소</p>
+                </div>
+                <dl class="mini-meta">
+                    <div><dt>후기</dt><dd th:text="${workplace.reviewCount}">0</dd></div>
+                    <div><dt>최근 공고</dt><dd th:text="${workplace.recentJobPostingCount}">0</dd></div>
+                </dl>
+            </article>
+        </aside>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/js/map.js}"></script>
+</body>
+</html>

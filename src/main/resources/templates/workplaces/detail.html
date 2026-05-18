@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${detail.workplace.name}">사업장 상세</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="page">
+    <div class="notice success" th:if="${message}" th:text="${message}"></div>
+
+    <section class="detail-head">
+        <div>
+            <p class="eyebrow" th:text="${detail.workplace.category}">카테고리</p>
+            <h1 th:text="${detail.workplace.name}">사업장명</h1>
+            <p th:text="${detail.workplace.address}">주소</p>
+            <p class="muted" th:text="${detail.workplace.description}">설명</p>
+        </div>
+        <div class="score-card">
+            <span class="badge large" th:classappend="${detail.markerColor}" th:text="${detail.cleanScore == null ? '후기 부족' : #numbers.formatDecimal(detail.cleanScore, 0, 0) + '점'}">80점</span>
+            <p>승인 후기 <strong th:text="${detail.approvedReviewCount}">0</strong>개 기준</p>
+            <p class="muted">클린 지수는 제출된 후기 기반의 참고 지표입니다.</p>
+        </div>
+    </section>
+
+    <section class="grid two">
+        <div class="panel">
+            <h2>점수 산출 근거</h2>
+            <ul class="policy-list">
+                <li>근로계약서 작성 O: +20점</li>
+                <li>최저시급 준수 O: +20점</li>
+                <li>주휴수당 지급 O 또는 해당 없음: +15점</li>
+                <li>휴게시간 보장 O 또는 해당 없음: +15점</li>
+                <li>임금 지급 지연 X: +15점</li>
+                <li>부당한 추가 업무 요구 X: +10점</li>
+                <li>폭언/폭행 경험 X: +5점</li>
+            </ul>
+        </div>
+
+        <div class="panel">
+            <h2>최근 공고 빈도</h2>
+            <p>최근 30일 공고 <strong th:text="${detail.recentJobPostingCount}">0</strong>건</p>
+            <p class="warning" th:if="${detail.frequentJobPosting}">공고가 자주 올라오는 편입니다. 근무 조건을 꼼꼼히 확인하세요.</p>
+            <p class="muted" th:unless="${detail.frequentJobPosting}">최근 공고 빈도는 높지 않습니다.</p>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>체크리스트 항목별 통계</h2>
+        <div class="stats">
+            <div class="stat-row" th:each="stat : ${detail.checklistStats}">
+                <strong th:text="${stat.label}">항목</strong>
+                <span>긍정 <b th:text="${stat.positiveCount}">0</b></span>
+                <span>부정 <b th:text="${stat.negativeCount}">0</b></span>
+                <span th:if="${stat.notApplicableCount > 0}">해당 없음 <b th:text="${stat.notApplicableCount}">0</b></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="section-actions">
+            <h2>검토 완료된 주관식 후기</h2>
+            <a class="button primary" th:href="@{/reviews/new(workplaceId=${detail.workplace.id})}">후기 작성</a>
+        </div>
+        <p class="muted" th:if="${#lists.isEmpty(detail.approvedReviews)}">아직 공개된 후기가 없습니다.</p>
+        <article class="review-card" th:each="review : ${detail.approvedReviews}">
+            <div class="review-meta">
+                <span th:text="${review.workPeriod}">근무 기간</span>
+                <span th:text="${review.employmentType}">근무 형태</span>
+                <span th:text="${review.recommendsWorkplace ? '추천 O' : '추천 X'}">추천</span>
+            </div>
+            <p th:text="${#strings.isEmpty(review.subjectiveComment) ? '주관식 후기가 없습니다.' : review.subjectiveComment}">후기</p>
+        </article>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

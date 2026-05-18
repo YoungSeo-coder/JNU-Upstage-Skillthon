@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서비스 소개</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="page narrow">
+    <section class="section-head">
+        <h1>전남대 클린 알바 지도</h1>
+        <p>전남대 주변 알바 사업장의 근로환경 정보를 객관적인 체크리스트로 모아 학생들의 선택을 돕는 서비스입니다.</p>
+    </section>
+
+    <section class="panel">
+        <h2>클린 지수 산출 방식</h2>
+        <p>근로계약서 작성, 최저시급 준수, 주휴수당, 휴게시간, 임금 지급 지연, 부당한 추가 업무, 폭언/폭행 경험 여부를 점수화합니다. 승인 완료 후기의 평균만 사업장 점수에 반영됩니다.</p>
+    </section>
+
+    <section class="panel">
+        <h2>후기 작성 시 주의사항</h2>
+        <ul class="policy-list">
+            <li>후기는 객관식 체크리스트 중심으로 작성해 주세요.</li>
+            <li>주관식 후기에는 사실에 기반한 내용만 적어 주세요.</li>
+            <li>명예훼손, 모욕, 개인정보 노출 위험이 있는 내용은 공개되지 않을 수 있습니다.</li>
+            <li>인증 자료는 공개되지 않고 관리자 검토 목적으로만 사용됩니다.</li>
+            <li>개인정보가 포함된 자료는 반드시 가리고 업로드해 주세요.</li>
+        </ul>
+    </section>
+
+    <section class="panel">
+        <h2>법적 안내</h2>
+        <p>이 서비스는 법률 자문이 아니라 알바 경험 공유와 정보 제공 목적의 MVP입니다. 클린 지수는 절대적인 평가가 아니며, 후기 수가 적은 사업장은 지표가 왜곡될 수 있습니다.</p>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

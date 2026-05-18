@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>후기 작성</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="page narrow">
+    <section class="section-head">
+        <h1>알바 근로환경 후기 작성</h1>
+        <p>후기는 객관식 체크리스트 중심으로 수집되며, 주관식 후기는 관리자 검토 후 공개됩니다.</p>
+    </section>
+
+    <div class="notice">인증 자료는 공개되지 않고 관리자 검토 목적으로만 사용됩니다. 개인정보는 가리고 업로드해 주세요.</div>
+
+    <form class="form-card" th:action="@{/reviews}" th:object="${reviewForm}" method="post" enctype="multipart/form-data">
+        <label>사업장
+            <select th:field="*{workplaceId}" required>
+                <option value="">선택</option>
+                <option th:each="workplace : ${workplaces}" th:value="${workplace.id}" th:text="${workplace.name}">사업장</option>
+            </select>
+            <small class="error" th:errors="*{workplaceId}"></small>
+        </label>
+
+        <div class="form-grid">
+            <label>근무 기간
+                <input type="text" th:field="*{workPeriod}" placeholder="예: 2026.01-2026.03" required>
+                <small class="error" th:errors="*{workPeriod}"></small>
+            </label>
+            <label>근무 형태
+                <input type="text" th:field="*{employmentType}" placeholder="예: 주말 파트타임" required>
+                <small class="error" th:errors="*{employmentType}"></small>
+            </label>
+        </div>
+
+        <fieldset>
+            <legend>O/X 체크리스트</legend>
+            <div class="question"><span>근로계약서 작성 여부</span><label><input type="radio" th:field="*{hasWrittenContract}" value="true"> O</label><label><input type="radio" th:field="*{hasWrittenContract}" value="false"> X</label></div>
+            <div class="question"><span>최저시급 준수 여부</span><label><input type="radio" th:field="*{followsMinimumWage}" value="true"> O</label><label><input type="radio" th:field="*{followsMinimumWage}" value="false"> X</label></div>
+            <div class="question"><span>주휴수당 지급 여부</span><label th:each="option : ${answerOptions}"><input type="radio" th:field="*{receivesWeeklyHolidayPay}" th:value="${option}"> <span th:text="${option.label}">O</span></label></div>
+            <div class="question"><span>휴게시간 보장 여부</span><label th:each="option : ${answerOptions}"><input type="radio" th:field="*{hasBreakTime}" th:value="${option}"> <span th:text="${option.label}">O</span></label></div>
+            <div class="question"><span>임금 지급 지연 경험</span><label><input type="radio" th:field="*{hasDelayedPayment}" value="true"> O</label><label><input type="radio" th:field="*{hasDelayedPayment}" value="false"> X</label></div>
+            <div class="question"><span>부당한 추가 업무 요구 경험</span><label><input type="radio" th:field="*{hasUnfairExtraWork}" value="true"> O</label><label><input type="radio" th:field="*{hasUnfairExtraWork}" value="false"> X</label></div>
+            <div class="question"><span>폭언/폭행 경험</span><label><input type="radio" th:field="*{hasVerbalAbuse}" value="true"> O</label><label><input type="radio" th:field="*{hasVerbalAbuse}" value="false"> X</label></div>
+            <div class="question"><span>전반적인 근무 추천 여부</span><label><input type="radio" th:field="*{recommendsWorkplace}" value="true"> O</label><label><input type="radio" th:field="*{recommendsWorkplace}" value="false"> X</label></div>
+        </fieldset>
+
+        <label>주관식 후기 선택 입력
+            <textarea th:field="*{subjectiveComment}" rows="5" placeholder="사실에 기반한 내용만 작성해 주세요."></textarea>
+            <small class="error" th:errors="*{subjectiveComment}"></small>
+        </label>
+
+        <label>근로 인증 자료 필수
+            <input type="file" th:field="*{proofFile}" accept=".pdf,.png,.jpg,.jpeg,.heic" required>
+            <small>근로계약서, 입금 내역, 근무 관련 사진, 대화 캡처 등을 사용할 수 있습니다.</small>
+            <small class="error" th:errors="*{proofFile}"></small>
+        </label>
+
+        <button class="button primary" type="submit">검토 요청 제출</button>
+    </form>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

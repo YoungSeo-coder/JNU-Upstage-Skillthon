@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 검토 대기 후기</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="page">
+    <section class="section-head">
+        <h1>검토 대기 후기</h1>
+        <p>관리자 로그인은 MVP 범위에서 생략되어 있습니다. 추후 Spring Security 적용 예정입니다.</p>
+    </section>
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>사업장</th>
+                <th>근무 형태</th>
+                <th>점수</th>
+                <th>인증 자료</th>
+                <th>상세</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="review : ${reviews}">
+                <td th:text="${review.id}">1</td>
+                <td th:text="${review.workplace.name}">사업장</td>
+                <td th:text="${review.employmentType}">형태</td>
+                <td th:text="${review.calculatedScore + '점'}">0점</td>
+                <td th:text="${review.proofFileName}">file.pdf</td>
+                <td><a th:href="@{/admin/reviews/{id}(id=${review.id})}">검토</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
